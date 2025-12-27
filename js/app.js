@@ -286,7 +286,7 @@
         const hasLongNotes = menu.notes && (menu.notes.length > 100 || menu.notes.includes('\n'));
         const notesHtml = menu.notes
             ? `<div class="menu-item-notes">
-                <span class="menu-item-notes-text">${escapeHtml(menu.notes)}</span>
+                <span class="menu-item-notes-text">${linkify(menu.notes)}</span>
                 ${hasLongNotes ? `<button class="expand-notes-btn" data-id="${menu.id}">[+]</button>` : ''}
                </div>`
             : '';
@@ -889,15 +889,15 @@
         // Set the title with dish name
         elements.notesModalTitle.textContent = `═══ ${menu.name.toUpperCase()} ═══`;
         
-        // Format the notes content - preserve newlines and make it readable
-        elements.notesModalBody.textContent = menu.notes;
+        // Format the notes content - linkify URLs and preserve newlines
+        elements.notesModalBody.innerHTML = linkify(menu.notes);
         
         elements.notesModal.classList.remove('hidden');
     }
     
     function closeNotesModal() {
         elements.notesModal.classList.add('hidden');
-        elements.notesModalBody.textContent = '';
+        elements.notesModalBody.innerHTML = '';
     }
     
     function handleNotesModalBackdropClick(e) {
@@ -970,6 +970,25 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    /**
+     * Convert URLs in text to clickable links
+     * @param {string} text - Text that may contain URLs
+     * @returns {string} HTML with URLs converted to anchor tags
+     */
+    function linkify(text) {
+        // First escape HTML to prevent XSS
+        const escaped = escapeHtml(text);
+        
+        // URL regex pattern - matches http, https, and www URLs
+        const urlPattern = /(\b(https?:\/\/|www\.)[^\s<>"\)]+)/gi;
+        
+        return escaped.replace(urlPattern, (match) => {
+            // Add protocol if missing (for www. URLs)
+            const href = match.startsWith('www.') ? 'https://' + match : match;
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="notes-link">${match}</a>`;
+        });
     }
     
     function debounce(func, wait) {

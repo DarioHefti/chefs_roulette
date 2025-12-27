@@ -1321,6 +1321,26 @@ textarea.typewriter-input {
     margin-bottom: var(--spacing-xs);
 }
 
+/* Notes Links */
+.notes-link {
+    color: var(--accent-green);
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 2px;
+    transition: color 0.2s ease;
+    word-break: break-all;
+}
+
+.notes-link:hover,
+.notes-link:focus {
+    color: var(--text-cream);
+    text-decoration-style: solid;
+}
+
+.notes-link:visited {
+    color: var(--text-amber);
+}
+
 /* ═══════════════════════════════════════════════════════════════
    HISTORY SECTION
    ═══════════════════════════════════════════════════════════════ */
