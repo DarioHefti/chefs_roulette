@@ -330,7 +330,7 @@ Total: ${menus.length} menu(s)
     }
     
     /**
-     * Generate shareable JSON data (reliable format for import)
+     * Generate shareable JSON data
      * @returns {string|null} JSON string of menus
      */
     function generateShareData() {
@@ -348,34 +348,6 @@ Total: ${menus.length} menu(s)
         }));
         
         return JSON.stringify(exportData);
-    }
-    
-    /**
-     * Generate human-readable text for WhatsApp (names only, with link to data)
-     * @returns {string|null} Formatted text
-     */
-    function generateWhatsAppText() {
-        const menus = getMenus();
-        
-        if (menus.length === 0) {
-            return null;
-        }
-        
-        let text = "CHEF'S ROULETTE - Menu List\n";
-        text += '----------------------------\n';
-        
-        menus.forEach((menu, i) => {
-            text += `${i + 1}. ${menu.name}`;
-            if (menu.tags.length > 0) {
-                text += ` (${menu.tags.join(', ')})`;
-            }
-            text += '\n';
-        });
-        
-        text += '----------------------------\n';
-        text += `Total: ${menus.length} menu(s)`;
-        
-        return text;
     }
     
     /**
@@ -413,100 +385,43 @@ Total: ${menus.length} menu(s)
     }
     
     /**
-     * Share menus via WhatsApp
+     * Share menus via WhatsApp (JSON format)
      */
     function shareViaWhatsApp() {
-        const text = generateWhatsAppText();
+        const data = generateShareData();
         
-        if (!text) {
+        if (!data) {
             return false;
         }
         
-        const encodedText = encodeURIComponent(text);
+        const encodedText = encodeURIComponent(data);
         const whatsappUrl = `https://wa.me/?text=${encodedText}`;
         window.open(whatsappUrl, '_blank');
         return true;
     }
     
     /**
-     * Parse shared text and extract menus
-     * Supports both JSON format and legacy text format
-     * @param {string} text - The shared text to parse
+     * Parse shared JSON text and extract menus
+     * @param {string} text - The JSON text to parse
      * @returns {Array} Array of menu objects (without ids)
      */
     function parseSharedText(text) {
         const trimmed = text.trim();
         
-        // Try JSON format first (new format)
-        if (trimmed.startsWith('[')) {
-            try {
-                const parsed = JSON.parse(trimmed);
-                if (Array.isArray(parsed)) {
-                    return parsed.map(item => ({
-                        name: item.name || '',
-                        tags: Array.isArray(item.tags) ? item.tags : [],
-                        notes: item.notes || ''
-                    })).filter(m => m.name);
-                }
-            } catch (e) {
-                // Not valid JSON, try legacy format
+        try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+                return parsed.map(item => ({
+                    name: item.name || '',
+                    tags: Array.isArray(item.tags) ? item.tags : [],
+                    notes: item.notes || ''
+                })).filter(m => m.name);
             }
+            return [];
+        } catch (e) {
+            console.error('Failed to parse JSON:', e);
+            return [];
         }
-        
-        // Legacy text format (for backwards compatibility)
-        const menus = [];
-        const lines = trimmed.split('\n');
-        
-        for (const line of lines) {
-            const lineTrimmed = line.trim();
-            if (!lineTrimmed || 
-                lineTrimmed.startsWith('CHEF') ||
-                lineTrimmed.startsWith('---') ||
-                lineTrimmed.startsWith('===') ||
-                lineTrimmed.startsWith('Total:') ||
-                lineTrimmed.startsWith('Import at:') ||
-                /^═+$/.test(lineTrimmed)) {
-                continue;
-            }
-            
-            // Remove bullet point or number prefix
-            let menuLine = lineTrimmed;
-            if (menuLine.startsWith('•')) {
-                menuLine = menuLine.substring(1).trim();
-            }
-            // Remove numbered prefix like "1. " or "12. "
-            menuLine = menuLine.replace(/^\d+\.\s*/, '');
-            
-            // Parse: Name | tags | notes OR Name (tags)
-            if (menuLine.includes('|')) {
-                const parts = menuLine.split('|').map(p => p.trim());
-                if (parts.length >= 1 && parts[0]) {
-                    menus.push({
-                        name: parts[0],
-                        tags: parts[1] ? parts[1].split(',').map(t => t.trim()).filter(t => t) : [],
-                        notes: parts.slice(2).join(' | ') || ''
-                    });
-                }
-            } else {
-                // Parse: Name (tags) format
-                const match = menuLine.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-                if (match) {
-                    menus.push({
-                        name: match[1].trim(),
-                        tags: match[2].split(',').map(t => t.trim()).filter(t => t),
-                        notes: ''
-                    });
-                } else if (menuLine) {
-                    menus.push({
-                        name: menuLine,
-                        tags: [],
-                        notes: ''
-                    });
-                }
-            }
-        }
-        
-        return menus;
     }
     
     /**
@@ -642,7 +557,6 @@ Total: ${menus.length} menu(s)
         exportMenusAsText,
         downloadExport,
         generateShareData,
-        generateWhatsAppText,
         copyToClipboard,
         shareViaWhatsApp,
         parseSharedText,

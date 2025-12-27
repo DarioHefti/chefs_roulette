@@ -503,8 +503,17 @@
     }
     
     function openShareModal() {
-        // Generate preview text
-        const previewText = Storage.generateWhatsAppText();
+        // Generate preview - show menu count and names
+        const menus = Storage.getMenus();
+        let previewText = `${menus.length} menu(s) to share:\n\n`;
+        menus.forEach((menu, i) => {
+            previewText += `${i + 1}. ${menu.name}`;
+            if (menu.tags.length > 0) {
+                previewText += ` (${menu.tags.join(', ')})`;
+            }
+            previewText += '\n';
+        });
+        
         elements.sharePreview.textContent = previewText;
         elements.shareStatus.classList.add('hidden');
         elements.shareModal.classList.remove('hidden');
