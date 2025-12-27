@@ -174,4 +174,3 @@ Since this is a static site:
 - [ ] localStorage keys are namespaced to avoid conflicts
 - [ ] Responsive design works on mobile
 - [ ] ASCII art displays correctly (monospace preserved)
-

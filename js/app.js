@@ -38,6 +38,14 @@
         menuNotes: document.getElementById('menu-notes'),
         cancelBtn: document.getElementById('cancel-btn'),
         
+        // Share Modal
+        shareModal: document.getElementById('share-modal'),
+        closeShareModal: document.getElementById('close-share-modal'),
+        sharePreview: document.getElementById('share-preview'),
+        copyClipboardBtn: document.getElementById('copy-clipboard-btn'),
+        shareWhatsappBtn: document.getElementById('share-whatsapp-btn'),
+        shareStatus: document.getElementById('share-status'),
+        
         // Import Modal
         importModal: document.getElementById('import-modal'),
         closeImportModal: document.getElementById('close-import-modal'),
@@ -131,6 +139,12 @@
         elements.cancelBtn.addEventListener('click', closeModal);
         elements.menuForm.addEventListener('submit', handleFormSubmit);
         elements.menuModal.addEventListener('click', handleModalBackdropClick);
+        
+        // Share Modal
+        elements.closeShareModal.addEventListener('click', closeShareModal);
+        elements.shareModal.addEventListener('click', handleShareModalBackdropClick);
+        elements.copyClipboardBtn.addEventListener('click', handleCopyToClipboard);
+        elements.shareWhatsappBtn.addEventListener('click', handleShareWhatsApp);
         
         // Import Modal
         elements.closeImportModal.addEventListener('click', closeImportModal);
@@ -485,8 +499,49 @@
             return;
         }
         
+        openShareModal();
+    }
+    
+    function openShareModal() {
+        // Generate preview text
+        const previewText = Storage.generateWhatsAppText();
+        elements.sharePreview.textContent = previewText;
+        elements.shareStatus.classList.add('hidden');
+        elements.shareModal.classList.remove('hidden');
+    }
+    
+    function closeShareModal() {
+        elements.shareModal.classList.add('hidden');
+        elements.shareStatus.classList.add('hidden');
+    }
+    
+    function handleShareModalBackdropClick(e) {
+        if (e.target === elements.shareModal) {
+            closeShareModal();
+        }
+    }
+    
+    async function handleCopyToClipboard() {
+        const success = await Storage.copyToClipboard();
+        
+        if (success) {
+            elements.shareStatus.textContent = '✓ Copied to clipboard! Paste in the Import dialog.';
+            elements.shareStatus.classList.remove('hidden');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                elements.shareStatus.classList.add('hidden');
+            }, 3000);
+        } else {
+            alert('Failed to copy to clipboard. Please try again.');
+        }
+    }
+    
+    function handleShareWhatsApp() {
         if (!Storage.shareViaWhatsApp()) {
-            alert('Failed to open WhatsApp. Try adding some menus first!');
+            alert('Failed to open WhatsApp.');
+        } else {
+            closeShareModal();
         }
     }
     
@@ -915,6 +970,10 @@
         if (e.key === 'Escape') {
             if (!elements.menuModal.classList.contains('hidden')) {
                 closeModal();
+                return;
+            }
+            if (!elements.shareModal.classList.contains('hidden')) {
+                closeShareModal();
                 return;
             }
             if (!elements.importModal.classList.contains('hidden')) {

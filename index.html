@@ -160,6 +160,35 @@
             </div>
         </div>
 
+        <!-- Share Modal -->
+        <div class="modal hidden" id="share-modal">
+            <div class="modal-content share-modal-content">
+                <div class="modal-header">
+                    <h3>═══ SHARE MENUS ═══</h3>
+                    <button class="close-button" id="close-share-modal">[X]</button>
+                </div>
+                
+                <div class="share-preview" id="share-preview"></div>
+                
+                <div class="share-actions">
+                    <button type="button" class="share-option-btn" id="copy-clipboard-btn">
+                        <span class="share-icon">📋</span>
+                        COPY TO CLIPBOARD
+                    </button>
+                    <button type="button" class="share-option-btn" id="share-whatsapp-btn">
+                        <span class="share-icon">💬</span>
+                        SHARE VIA WHATSAPP
+                    </button>
+                </div>
+                
+                <div class="share-status hidden" id="share-status"></div>
+                
+                <div class="share-note">
+                    Clipboard contains JSON data for import. WhatsApp shows a readable list.
+                </div>
+            </div>
+        </div>
+
         <!-- Import Modal -->
         <div class="modal hidden" id="import-modal">
             <div class="modal-content">

@@ -804,6 +804,89 @@ textarea.typewriter-input {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   SHARE MODAL
+   ═══════════════════════════════════════════════════════════════ */
+
+.share-modal-content {
+    max-width: 450px;
+}
+
+.share-preview {
+    background: var(--bg-dark);
+    border: 1px dashed var(--border-color);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    color: var(--text-cream);
+    white-space: pre-wrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+.share-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.share-option-btn {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 2px solid var(--border-color);
+    color: var(--text-cream);
+    padding: var(--spacing-md);
+    font-family: var(--font-typewriter);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.share-option-btn:hover,
+.share-option-btn:focus {
+    border-color: var(--text-amber);
+    color: var(--text-amber);
+    background: var(--bg-light);
+    outline: none;
+}
+
+.share-option-btn:active {
+    transform: translateY(1px);
+}
+
+.share-icon {
+    font-size: 1.2em;
+}
+
+.share-status {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm);
+    text-align: center;
+    font-size: 0.85rem;
+    border: 1px dashed var(--accent-green);
+    color: var(--accent-green);
+}
+
+.share-status.hidden {
+    display: none;
+}
+
+.share-note {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-align: center;
+    border-top: 1px dashed var(--border-color);
+}
+
+/* ═══════════════════════════════════════════════════════════════
    IMPORT MODAL
    ═══════════════════════════════════════════════════════════════ */
 

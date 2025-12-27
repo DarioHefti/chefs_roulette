@@ -330,41 +330,93 @@ Total: ${menus.length} menu(s)
     }
     
     /**
-     * Generate shareable text format for WhatsApp
-     * Format: 🍽️ CHEF'S ROULETTE\n---\nName | tags | notes\n---
+     * Generate shareable JSON data (reliable format for import)
+     * @returns {string|null} JSON string of menus
      */
-    function generateShareText() {
+    function generateShareData() {
         const menus = getMenus();
         
         if (menus.length === 0) {
             return null;
         }
         
-        let text = '🍽️ CHEF\'S ROULETTE MENU LIST\n';
-        text += '═══════════════════════\n';
+        // Export only necessary fields (no id, createdAt, etc.)
+        const exportData = menus.map(menu => ({
+            name: menu.name,
+            tags: menu.tags,
+            notes: menu.notes
+        }));
         
-        menus.forEach(menu => {
-            const tags = menu.tags.length > 0 ? menu.tags.join(', ') : '';
-            const notes = menu.notes || '';
-            
-            // Format: Name | tags | notes (use | as separator)
-            text += `• ${menu.name}`;
-            if (tags) text += ` | ${tags}`;
-            if (notes) text += ` | ${notes}`;
+        return JSON.stringify(exportData);
+    }
+    
+    /**
+     * Generate human-readable text for WhatsApp (names only, with link to data)
+     * @returns {string|null} Formatted text
+     */
+    function generateWhatsAppText() {
+        const menus = getMenus();
+        
+        if (menus.length === 0) {
+            return null;
+        }
+        
+        let text = "CHEF'S ROULETTE - Menu List\n";
+        text += '----------------------------\n';
+        
+        menus.forEach((menu, i) => {
+            text += `${i + 1}. ${menu.name}`;
+            if (menu.tags.length > 0) {
+                text += ` (${menu.tags.join(', ')})`;
+            }
             text += '\n';
         });
         
-        text += '═══════════════════════\n';
-        text += 'Import at: chefs-roulette';
+        text += '----------------------------\n';
+        text += `Total: ${menus.length} menu(s)`;
         
         return text;
+    }
+    
+    /**
+     * Copy share data to clipboard
+     * @returns {Promise<boolean>} Success status
+     */
+    async function copyToClipboard() {
+        const data = generateShareData();
+        
+        if (!data) {
+            return false;
+        }
+        
+        try {
+            await navigator.clipboard.writeText(data);
+            return true;
+        } catch (e) {
+            console.error('Failed to copy to clipboard:', e);
+            // Fallback for older browsers
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = data;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                return true;
+            } catch (e2) {
+                console.error('Fallback copy failed:', e2);
+                return false;
+            }
+        }
     }
     
     /**
      * Share menus via WhatsApp
      */
     function shareViaWhatsApp() {
-        const text = generateShareText();
+        const text = generateWhatsAppText();
         
         if (!text) {
             return false;
@@ -378,40 +430,79 @@ Total: ${menus.length} menu(s)
     
     /**
      * Parse shared text and extract menus
+     * Supports both JSON format and legacy text format
      * @param {string} text - The shared text to parse
      * @returns {Array} Array of menu objects (without ids)
      */
     function parseSharedText(text) {
+        const trimmed = text.trim();
+        
+        // Try JSON format first (new format)
+        if (trimmed.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) {
+                    return parsed.map(item => ({
+                        name: item.name || '',
+                        tags: Array.isArray(item.tags) ? item.tags : [],
+                        notes: item.notes || ''
+                    })).filter(m => m.name);
+                }
+            } catch (e) {
+                // Not valid JSON, try legacy format
+            }
+        }
+        
+        // Legacy text format (for backwards compatibility)
         const menus = [];
-        const lines = text.split('\n');
+        const lines = trimmed.split('\n');
         
         for (const line of lines) {
-            // Skip header/footer lines
-            const trimmed = line.trim();
-            if (!trimmed || 
-                trimmed.startsWith('🍽️') || 
-                trimmed.startsWith('═') || 
-                trimmed.startsWith('---') ||
-                trimmed.startsWith('Import at:')) {
+            const lineTrimmed = line.trim();
+            if (!lineTrimmed || 
+                lineTrimmed.startsWith('CHEF') ||
+                lineTrimmed.startsWith('---') ||
+                lineTrimmed.startsWith('===') ||
+                lineTrimmed.startsWith('Total:') ||
+                lineTrimmed.startsWith('Import at:') ||
+                /^═+$/.test(lineTrimmed)) {
                 continue;
             }
             
-            // Remove bullet point if present
-            let menuLine = trimmed;
+            // Remove bullet point or number prefix
+            let menuLine = lineTrimmed;
             if (menuLine.startsWith('•')) {
                 menuLine = menuLine.substring(1).trim();
             }
+            // Remove numbered prefix like "1. " or "12. "
+            menuLine = menuLine.replace(/^\d+\.\s*/, '');
             
-            // Parse: Name | tags | notes
-            const parts = menuLine.split('|').map(p => p.trim());
-            
-            if (parts.length >= 1 && parts[0]) {
-                const menu = {
-                    name: parts[0],
-                    tags: parts[1] ? parts[1].split(',').map(t => t.trim()).filter(t => t) : [],
-                    notes: parts[2] || ''
-                };
-                menus.push(menu);
+            // Parse: Name | tags | notes OR Name (tags)
+            if (menuLine.includes('|')) {
+                const parts = menuLine.split('|').map(p => p.trim());
+                if (parts.length >= 1 && parts[0]) {
+                    menus.push({
+                        name: parts[0],
+                        tags: parts[1] ? parts[1].split(',').map(t => t.trim()).filter(t => t) : [],
+                        notes: parts.slice(2).join(' | ') || ''
+                    });
+                }
+            } else {
+                // Parse: Name (tags) format
+                const match = menuLine.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+                if (match) {
+                    menus.push({
+                        name: match[1].trim(),
+                        tags: match[2].split(',').map(t => t.trim()).filter(t => t),
+                        notes: ''
+                    });
+                } else if (menuLine) {
+                    menus.push({
+                        name: menuLine,
+                        tags: [],
+                        notes: ''
+                    });
+                }
             }
         }
         
@@ -550,7 +641,9 @@ Total: ${menus.length} menu(s)
         // Export/Share/Import
         exportMenusAsText,
         downloadExport,
-        generateShareText,
+        generateShareData,
+        generateWhatsAppText,
+        copyToClipboard,
         shareViaWhatsApp,
         parseSharedText,
         importMenus
