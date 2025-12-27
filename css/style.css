@@ -114,6 +114,7 @@ body {
     color: var(--text-cream);
     text-shadow: 0 0 20px var(--shadow-color);
     letter-spacing: 0.15em;
+    margin-top: var(--spacing-xl);
     margin-bottom: var(--spacing-sm);
     border-top: 2px solid var(--border-color);
     border-bottom: 2px solid var(--border-color);
@@ -898,8 +899,8 @@ textarea.typewriter-input {
 
 .ai-settings-btn {
     position: absolute;
-    top: var(--spacing-sm);
-    right: var(--spacing-sm);
+    top: 0;
+    right: 0;
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-dim);
@@ -1456,8 +1457,6 @@ textarea.typewriter-input {
     
     /* AI Settings Button */
     .ai-settings-btn {
-        top: var(--spacing-md);
-        right: var(--spacing-md);
         padding: var(--spacing-sm);
     }
     
