@@ -469,6 +469,57 @@ Total: ${menus.length} menu(s)
         return result;
     }
     
+    // ═══════════════════════════════════════════════════════════════
+    // AI SETTINGS
+    // ═══════════════════════════════════════════════════════════════
+    
+    const AI_SETTINGS_KEY = 'chefs_roulette_ai_settings';
+    
+    /**
+     * Get AI settings from localStorage
+     */
+    function getAISettings() {
+        try {
+            const data = localStorage.getItem(AI_SETTINGS_KEY);
+            if (data) {
+                return JSON.parse(data);
+            }
+            return {
+                apiUrl: '',
+                apiKey: '',
+                modelName: ''
+            };
+        } catch (e) {
+            console.error('Error reading AI settings:', e);
+            return {
+                apiUrl: '',
+                apiKey: '',
+                modelName: ''
+            };
+        }
+    }
+    
+    /**
+     * Save AI settings to localStorage
+     */
+    function saveAISettings(settings) {
+        try {
+            localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(settings));
+            return true;
+        } catch (e) {
+            console.error('Error saving AI settings:', e);
+            return false;
+        }
+    }
+    
+    /**
+     * Check if AI is configured
+     */
+    function isAIConfigured() {
+        const settings = getAISettings();
+        return settings.apiUrl && settings.apiKey && settings.modelName;
+    }
+    
     // Public API
     return {
         // Menus
@@ -490,6 +541,11 @@ Total: ${menus.length} menu(s)
         // Settings
         getSettings,
         updateSetting,
+        
+        // AI Settings
+        getAISettings,
+        saveAISettings,
+        isAIConfigured,
         
         // Export/Share/Import
         exportMenusAsText,

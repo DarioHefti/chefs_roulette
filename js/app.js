@@ -48,6 +48,27 @@
         cancelImportBtn: document.getElementById('cancel-import-btn'),
         confirmImportBtn: document.getElementById('confirm-import-btn'),
         
+        // AI Settings Modal
+        aiSettingsBtn: document.getElementById('ai-settings-btn'),
+        aiSettingsModal: document.getElementById('ai-settings-modal'),
+        closeAiSettingsModal: document.getElementById('close-ai-settings-modal'),
+        aiSettingsForm: document.getElementById('ai-settings-form'),
+        aiApiUrl: document.getElementById('ai-api-url'),
+        aiApiKey: document.getElementById('ai-api-key'),
+        aiModelName: document.getElementById('ai-model-name'),
+        aiSettingsStatus: document.getElementById('ai-settings-status'),
+        cancelAiSettingsBtn: document.getElementById('cancel-ai-settings-btn'),
+        
+        // AI Suggestions
+        aiSuggestBtn: document.getElementById('ai-suggest-btn'),
+        aiSuggestionsModal: document.getElementById('ai-suggestions-modal'),
+        closeAiSuggestionsModal: document.getElementById('close-ai-suggestions-modal'),
+        aiLoading: document.getElementById('ai-loading'),
+        aiError: document.getElementById('ai-error'),
+        aiErrorMessage: document.getElementById('ai-error-message'),
+        aiRetryBtn: document.getElementById('ai-retry-btn'),
+        aiSuggestionsList: document.getElementById('ai-suggestions-list'),
+        
         // History
         historyList: document.getElementById('history-list')
     };
@@ -61,6 +82,9 @@
         renderMenuList();
         renderHistory();
         updateTagFilter();
+        
+        // Update AI settings status
+        updateAiSettingsStatus();
         
         // Play intro typewriter effect
         playIntroAnimation();
@@ -105,6 +129,19 @@
         elements.importModeRadios.forEach(radio => {
             radio.addEventListener('change', updateImportPreview);
         });
+        
+        // AI Settings Modal
+        elements.aiSettingsBtn.addEventListener('click', openAiSettingsModal);
+        elements.closeAiSettingsModal.addEventListener('click', closeAiSettingsModal);
+        elements.cancelAiSettingsBtn.addEventListener('click', closeAiSettingsModal);
+        elements.aiSettingsForm.addEventListener('submit', handleAiSettingsSave);
+        elements.aiSettingsModal.addEventListener('click', handleAiSettingsBackdropClick);
+        
+        // AI Suggestions
+        elements.aiSuggestBtn.addEventListener('click', handleAiSuggest);
+        elements.closeAiSuggestionsModal.addEventListener('click', closeAiSuggestionsModal);
+        elements.aiSuggestionsModal.addEventListener('click', handleAiSuggestionsBackdropClick);
+        elements.aiRetryBtn.addEventListener('click', fetchAiSuggestions);
         
         // Keyboard shortcuts
         document.addEventListener('keydown', handleKeyboard);
@@ -290,6 +327,8 @@
         elements.modalTitle.textContent = '═══ NEW MENU ENTRY ═══';
         elements.menuForm.reset();
         elements.menuId.value = '';
+        elements.aiSuggestBtn.classList.remove('hidden');
+        updateAiSettingsStatus();
         elements.menuModal.classList.remove('hidden');
         elements.menuName.focus();
     }
@@ -303,6 +342,7 @@
         elements.menuName.value = menu.name;
         elements.menuTags.value = menu.tags.join(', ');
         elements.menuNotes.value = menu.notes;
+        elements.aiSuggestBtn.classList.add('hidden');
         elements.menuModal.classList.remove('hidden');
         elements.menuName.focus();
     }
@@ -534,6 +574,204 @@
     }
     
     // ═══════════════════════════════════════════════════════════════
+    // AI SETTINGS
+    // ═══════════════════════════════════════════════════════════════
+    
+    function openAiSettingsModal() {
+        const settings = Storage.getAISettings();
+        elements.aiApiUrl.value = settings.apiUrl || '';
+        elements.aiApiKey.value = settings.apiKey || '';
+        elements.aiModelName.value = settings.modelName || '';
+        updateAiSettingsStatus();
+        elements.aiSettingsModal.classList.remove('hidden');
+        elements.aiApiUrl.focus();
+    }
+    
+    function closeAiSettingsModal() {
+        elements.aiSettingsModal.classList.add('hidden');
+    }
+    
+    function handleAiSettingsBackdropClick(e) {
+        if (e.target === elements.aiSettingsModal) {
+            closeAiSettingsModal();
+        }
+    }
+    
+    function handleAiSettingsSave(e) {
+        e.preventDefault();
+        
+        const settings = {
+            apiUrl: elements.aiApiUrl.value.trim(),
+            apiKey: elements.aiApiKey.value.trim(),
+            modelName: elements.aiModelName.value.trim()
+        };
+        
+        if (!settings.apiUrl || !settings.apiKey || !settings.modelName) {
+            alert('Please fill in all fields.');
+            return;
+        }
+        
+        Storage.saveAISettings(settings);
+        updateAiSettingsStatus();
+        closeAiSettingsModal();
+    }
+    
+    function updateAiSettingsStatus() {
+        const isConfigured = Storage.isAIConfigured();
+        if (isConfigured) {
+            elements.aiSettingsStatus.innerHTML = '<span class="status-ok">✓ AI is configured and ready</span>';
+            elements.aiSuggestBtn.classList.remove('disabled');
+        } else {
+            elements.aiSettingsStatus.innerHTML = '<span class="status-warning">⚠ AI is not configured</span>';
+            elements.aiSuggestBtn.classList.add('disabled');
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // AI SUGGESTIONS
+    // ═══════════════════════════════════════════════════════════════
+    
+    function handleAiSuggest() {
+        if (!Storage.isAIConfigured()) {
+            alert('Please configure AI settings first by clicking the gear icon in the header.');
+            openAiSettingsModal();
+            return;
+        }
+        
+        // Close the add menu modal
+        closeModal();
+        
+        // Open AI suggestions modal
+        openAiSuggestionsModal();
+        
+        // Fetch suggestions
+        fetchAiSuggestions();
+    }
+    
+    function openAiSuggestionsModal() {
+        elements.aiSuggestionsModal.classList.remove('hidden');
+        showAiLoading();
+    }
+    
+    function closeAiSuggestionsModal() {
+        elements.aiSuggestionsModal.classList.add('hidden');
+        elements.aiSuggestionsList.innerHTML = '';
+    }
+    
+    function handleAiSuggestionsBackdropClick(e) {
+        if (e.target === elements.aiSuggestionsModal) {
+            closeAiSuggestionsModal();
+        }
+    }
+    
+    function showAiLoading() {
+        elements.aiLoading.classList.remove('hidden');
+        elements.aiError.classList.add('hidden');
+        elements.aiSuggestionsList.classList.add('hidden');
+    }
+    
+    function showAiError(message) {
+        elements.aiLoading.classList.add('hidden');
+        elements.aiError.classList.remove('hidden');
+        elements.aiSuggestionsList.classList.add('hidden');
+        elements.aiErrorMessage.textContent = message;
+    }
+    
+    function showAiSuggestions(suggestions) {
+        elements.aiLoading.classList.add('hidden');
+        elements.aiError.classList.add('hidden');
+        elements.aiSuggestionsList.classList.remove('hidden');
+        
+        elements.aiSuggestionsList.innerHTML = suggestions.map((suggestion, index) => `
+            <div class="ai-suggestion-card" data-index="${index}">
+                <div class="ai-suggestion-header">
+                    <h4 class="ai-suggestion-name">${escapeHtml(suggestion.name)}</h4>
+                    <button type="button" class="ai-add-btn" data-index="${index}">[+] ADD</button>
+                </div>
+                ${suggestion.tags.length > 0 ? `
+                    <div class="ai-suggestion-tags">
+                        ${suggestion.tags.map(t => `<span>#${escapeHtml(t)}</span>`).join('')}
+                    </div>
+                ` : ''}
+                <div class="ai-suggestion-recipe">
+                    <div class="recipe-toggle" data-index="${index}">
+                        <span class="toggle-icon">▶</span> Show Recipe
+                    </div>
+                    <div class="recipe-content hidden" id="recipe-content-${index}">
+                        ${escapeHtml(suggestion.recipe).replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Store suggestions for later use
+        elements.aiSuggestionsList.dataset.suggestions = JSON.stringify(suggestions);
+        
+        // Bind add buttons
+        elements.aiSuggestionsList.querySelectorAll('.ai-add-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                addAiSuggestion(index);
+            });
+        });
+        
+        // Bind recipe toggles
+        elements.aiSuggestionsList.querySelectorAll('.recipe-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                const index = e.currentTarget.dataset.index;
+                const content = document.getElementById(`recipe-content-${index}`);
+                const icon = e.currentTarget.querySelector('.toggle-icon');
+                
+                if (content.classList.contains('hidden')) {
+                    content.classList.remove('hidden');
+                    icon.textContent = '▼';
+                    e.currentTarget.childNodes[2].textContent = ' Hide Recipe';
+                } else {
+                    content.classList.add('hidden');
+                    icon.textContent = '▶';
+                    e.currentTarget.childNodes[2].textContent = ' Show Recipe';
+                }
+            });
+        });
+    }
+    
+    async function fetchAiSuggestions() {
+        showAiLoading();
+        
+        try {
+            const existingMenus = Storage.getMenus().map(m => m.name);
+            const suggestions = await AI.generateSuggestions(existingMenus);
+            showAiSuggestions(suggestions);
+        } catch (error) {
+            showAiError(error.message || 'Failed to fetch AI suggestions. Please try again.');
+        }
+    }
+    
+    function addAiSuggestion(index) {
+        const suggestions = JSON.parse(elements.aiSuggestionsList.dataset.suggestions || '[]');
+        const suggestion = suggestions[index];
+        
+        if (!suggestion) return;
+        
+        // Add the menu with recipe in notes
+        Storage.addMenu(suggestion.name, suggestion.tags, suggestion.recipe);
+        
+        // Update UI
+        renderMenuList();
+        updateTagFilter();
+        
+        // Mark as added
+        const card = elements.aiSuggestionsList.querySelector(`.ai-suggestion-card[data-index="${index}"]`);
+        if (card) {
+            const btn = card.querySelector('.ai-add-btn');
+            btn.textContent = '✓ ADDED';
+            btn.disabled = true;
+            btn.classList.add('added');
+            card.classList.add('added');
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
     // KEYBOARD SHORTCUTS
     // ═══════════════════════════════════════════════════════════════
     
@@ -546,6 +784,14 @@
             }
             if (!elements.importModal.classList.contains('hidden')) {
                 closeImportModal();
+                return;
+            }
+            if (!elements.aiSettingsModal.classList.contains('hidden')) {
+                closeAiSettingsModal();
+                return;
+            }
+            if (!elements.aiSuggestionsModal.classList.contains('hidden')) {
+                closeAiSuggestionsModal();
                 return;
             }
         }

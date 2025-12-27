@@ -16,6 +16,14 @@
     <div class="container">
         <!-- Header -->
         <header class="header">
+            <!-- AI Settings Button -->
+            <button class="ai-settings-btn" id="ai-settings-btn" title="AI Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+            
             <!-- Mobile title (shows on small screens) -->
             <h1 class="mobile-title">CHEF'S ROULETTE</h1>
             
@@ -107,6 +115,11 @@
                     <button class="close-button" id="close-modal">[X]</button>
                 </div>
                 
+                <!-- AI Suggest Button -->
+                <button type="button" class="ai-suggest-btn" id="ai-suggest-btn">
+                    <span class="ai-icon">✨</span> LET THE AI SUGGEST A MENU
+                </button>
+                
                 <form id="menu-form">
                     <input type="hidden" id="menu-id">
                     
@@ -178,9 +191,75 @@
             </div>
         </div>
 
+        <!-- AI Settings Modal -->
+        <div class="modal hidden" id="ai-settings-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>═══ AI SETTINGS ═══</h3>
+                    <button class="close-button" id="close-ai-settings-modal">[X]</button>
+                </div>
+                
+                <div class="ai-settings-info">
+                    Configure your Azure OpenAI connection to enable AI-powered menu suggestions.
+                </div>
+                
+                <form id="ai-settings-form">
+                    <div class="form-group">
+                        <label for="ai-api-url">API URL *</label>
+                        <input type="text" id="ai-api-url" class="typewriter-input" required 
+                               placeholder="https://your-resource.cognitiveservices.azure.com/openai/responses?api-version=...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ai-api-key">API KEY *</label>
+                        <input type="password" id="ai-api-key" class="typewriter-input" required 
+                               placeholder="Your Azure OpenAI API key">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ai-model-name">MODEL NAME *</label>
+                        <input type="text" id="ai-model-name" class="typewriter-input" required 
+                               placeholder="e.g., gpt-4o, gpt-4o-mini">
+                    </div>
+                    
+                    <div class="ai-settings-status" id="ai-settings-status"></div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="cancel-button" id="cancel-ai-settings-btn">[CANCEL]</button>
+                        <button type="submit" class="submit-button">[SAVE SETTINGS]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- AI Suggestions Modal -->
+        <div class="modal hidden" id="ai-suggestions-modal">
+            <div class="modal-content ai-suggestions-content">
+                <div class="modal-header">
+                    <h3>═══ AI SUGGESTIONS ═══</h3>
+                    <button class="close-button" id="close-ai-suggestions-modal">[X]</button>
+                </div>
+                
+                <!-- Loading State -->
+                <div class="ai-loading" id="ai-loading">
+                    <div class="ai-spinner"></div>
+                    <p>The AI chef is cooking up suggestions...</p>
+                </div>
+                
+                <!-- Error State -->
+                <div class="ai-error hidden" id="ai-error">
+                    <p class="ai-error-message" id="ai-error-message"></p>
+                    <button type="button" class="action-button" id="ai-retry-btn">[RETRY]</button>
+                </div>
+                
+                <!-- Suggestions List -->
+                <div class="ai-suggestions-list hidden" id="ai-suggestions-list"></div>
+            </div>
+        </div>
+
         <!-- History Section -->
         <section class="history-section">
-            <h2 class="section-title">═══ RECENT DECREES ═══</h2>
+            <h2 class="section-title">═══ RECENT PROPHECIES =══</h2>
             <div class="history-list" id="history-list">
                 <div class="history-empty">No prophecies yet...</div>
             </div>
@@ -199,6 +278,7 @@
     <script src="js/storage.js"></script>
     <script src="js/typewriter.js"></script>
     <script src="js/roulette.js"></script>
+    <script src="js/ai.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
