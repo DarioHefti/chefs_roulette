@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chef's Roulette - The Hungry Typewriter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    <div class="paper-texture"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <pre class="ascii-title">
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║     ██████╗██╗  ██╗███████╗███████╗███████╗               ║
+║    ██╔════╝██║  ██║██╔════╝██╔════╝██╔════╝               ║
+║    ██║     ███████║█████╗  █████╗  ███████╗               ║
+║    ██║     ██╔══██║██╔══╝  ██╔══╝  ╚════██║               ║
+║    ╚██████╗██║  ██║███████╗██║     ███████║               ║
+║     ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝     ╚══════╝               ║
+║                                                           ║
+║    ██████╗  ██████╗ ██╗   ██╗██╗     ███████╗████████╗    ║
+║    ██╔══██╗██╔═══██╗██║   ██║██║     ██╔════╝╚══██╔══╝    ║
+║    ██████╔╝██║   ██║██║   ██║██║     █████╗     ██║       ║
+║    ██╔══██╗██║   ██║██║   ██║██║     ██╔══╝     ██║       ║
+║    ██║  ██║╚██████╔╝╚██████╔╝███████╗███████╗   ██║       ║
+║    ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚══════╝╚══════╝   ╚═╝       ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+            </pre>
+            <p class="tagline" id="tagline"></p>
+        </header>
+
+        <!-- The Oracle Section -->
+        <section class="oracle-section">
+            <div class="oracle-border">
+                <div class="oracle-controls">
+                    <div class="filter-group">
+                        <label for="tag-filter">Filter by tag:</label>
+                        <select id="tag-filter" class="typewriter-select">
+                            <option value="">All menus</option>
+                        </select>
+                    </div>
+                    
+                    <button class="spin-button" id="spin-button">SPIN THE WHEEL</button>
+                    
+                    <button class="veto-button hidden" id="veto-button">
+                        ✗ VETO & RE-ROLL
+                    </button>
+                </div>
+                
+                <div class="oracle-display hidden" id="oracle-display"></div>
+            </div>
+        </section>
+
+        <!-- Menu Registry Section -->
+        <section class="registry-section">
+            <h2 class="section-title">═══ MENU REGISTRY ═══</h2>
+            
+            <div class="registry-controls">
+                <button class="action-button" id="add-menu-btn">
+                    [+] ADD NEW MENU
+                </button>
+                <div class="search-group">
+                    <input type="text" id="search-input" class="typewriter-input" placeholder="Search menus...">
+                </div>
+                <button class="action-button" id="share-btn">
+                    [↑] SHARE
+                </button>
+                <button class="action-button" id="import-btn">
+                    [↓] IMPORT
+                </button>
+            </div>
+
+            <div class="menu-list" id="menu-list">
+                <div class="empty-state" id="empty-state">
+                    <pre>
+    ┌─────────────────────────────────────┐
+    │                                     │
+    │   The pantry echoes with            │
+    │   emptiness...                      │
+    │                                     │
+    │   Add your first menu to begin!     │
+    │                                     │
+    └─────────────────────────────────────┘
+                    </pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add/Edit Menu Modal -->
+        <div class="modal hidden" id="menu-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">═══ NEW MENU ENTRY ═══</h3>
+                    <button class="close-button" id="close-modal">[X]</button>
+                </div>
+                
+                <form id="menu-form">
+                    <input type="hidden" id="menu-id">
+                    
+                    <div class="form-group">
+                        <label for="menu-name">DISH NAME *</label>
+                        <input type="text" id="menu-name" class="typewriter-input" required 
+                               placeholder="e.g., Spaghetti Carbonara">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="menu-tags">TAGS (comma separated)</label>
+                        <input type="text" id="menu-tags" class="typewriter-input" 
+                               placeholder="e.g., italian, pasta, quick">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="menu-notes">NOTES / RECIPE LINK</label>
+                        <textarea id="menu-notes" class="typewriter-input" rows="3"
+                                  placeholder="e.g., Use guanciale, not bacon!"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="cancel-button" id="cancel-btn">[CANCEL]</button>
+                        <button type="submit" class="submit-button">[SAVE ENTRY]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Import Modal -->
+        <div class="modal hidden" id="import-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>═══ IMPORT MENUS ═══</h3>
+                    <button class="close-button" id="close-import-modal">[X]</button>
+                </div>
+                
+                <div class="import-instructions">
+                    Paste the shared menu list below:
+                </div>
+                
+                <textarea id="import-text" class="typewriter-input import-textarea" rows="8"
+                          placeholder="Paste shared menus here..."></textarea>
+                
+                <div class="import-options">
+                    <div class="import-option">
+                        <input type="radio" id="import-merge" name="import-mode" value="merge" checked>
+                        <label for="import-merge">Merge (skip duplicates)</label>
+                    </div>
+                    <div class="import-option">
+                        <input type="radio" id="import-update" name="import-mode" value="update">
+                        <label for="import-update">Merge (update existing)</label>
+                    </div>
+                    <div class="import-option">
+                        <input type="radio" id="import-replace" name="import-mode" value="replace">
+                        <label for="import-replace">Replace all menus</label>
+                    </div>
+                </div>
+                
+                <div class="import-preview hidden" id="import-preview">
+                    <div class="import-preview-title">Preview:</div>
+                    <div class="import-preview-list" id="import-preview-list"></div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="cancel-button" id="cancel-import-btn">[CANCEL]</button>
+                    <button type="button" class="submit-button" id="confirm-import-btn">[IMPORT]</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <section class="history-section">
+            <h2 class="section-title">═══ RECENT DECREES ═══</h2>
+            <div class="history-list" id="history-list">
+                <div class="history-empty">No prophecies yet...</div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <span>══════════════════════════════════════════════════</span>
+                <p>CHEF'S ROULETTE v1.0 | Data stored locally in your browser</p>
+                <span>══════════════════════════════════════════════════</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/typewriter.js"></script>
+    <script src="js/roulette.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
+
