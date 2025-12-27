@@ -155,8 +155,14 @@ const Roulette = (function() {
             ? `<span class="decree-tags">${menu.tags.map(t => '#' + t).join(' ')}</span>`
             : '';
         
+        // Check if notes are long enough to warrant an expand button
+        const hasLongNotes = menu.notes && (menu.notes.length > 50 || menu.notes.includes('\n'));
+        
         const notesHtml = menu.notes 
-            ? `<span class="decree-notes">"${truncate(menu.notes, 60)}"</span>`
+            ? `<div class="decree-notes-container">
+                <span class="decree-notes">"${truncate(menu.notes, 60)}"</span>
+                ${hasLongNotes ? `<button class="expand-notes-btn oracle-expand-notes">[+]</button>` : ''}
+               </div>`
             : '';
         
         const vetoedClass = isVetoed ? 'oracle-vetoed' : '';

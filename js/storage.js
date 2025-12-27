@@ -347,6 +347,7 @@ Total: ${menus.length} menu(s)
             notes: menu.notes
         }));
         
+        // Use compact JSON (no pretty print) for smaller size
         return JSON.stringify(exportData);
     }
     
@@ -406,20 +407,42 @@ Total: ${menus.length} menu(s)
      * @returns {Array} Array of menu objects (without ids)
      */
     function parseSharedText(text) {
-        const trimmed = text.trim();
+        if (!text) return [];
+        
+        let trimmed = text.trim();
+        
+        // Remove any potential BOM or weird whitespace
+        trimmed = trimmed.replace(/^\uFEFF/, '');
+        
+        // Try to find JSON array in the text (in case there's extra text around it)
+        const jsonMatch = trimmed.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+            trimmed = jsonMatch[0];
+        }
         
         try {
             const parsed = JSON.parse(trimmed);
+            
             if (Array.isArray(parsed)) {
                 return parsed.map(item => ({
-                    name: item.name || '',
-                    tags: Array.isArray(item.tags) ? item.tags : [],
-                    notes: item.notes || ''
+                    name: String(item.name || '').trim(),
+                    tags: Array.isArray(item.tags) ? item.tags.map(t => String(t).trim()) : [],
+                    notes: String(item.notes || '').trim()
                 })).filter(m => m.name);
             }
+            
+            // If it's a single object, wrap it in an array
+            if (typeof parsed === 'object' && parsed !== null && parsed.name) {
+                return [{
+                    name: String(parsed.name).trim(),
+                    tags: Array.isArray(parsed.tags) ? parsed.tags.map(t => String(t).trim()) : [],
+                    notes: String(parsed.notes || '').trim()
+                }];
+            }
+            
             return [];
         } catch (e) {
-            console.error('Failed to parse JSON:', e);
+            console.error('Failed to parse JSON:', e.message);
             return [];
         }
     }

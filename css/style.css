@@ -264,13 +264,23 @@ body {
     color: var(--accent-green);
 }
 
+.oracle-result .decree-notes-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-xs);
+    justify-content: center;
+}
+
 .oracle-result .decree-notes {
-    display: block;
     font-size: 0.8rem;
     color: var(--text-dim);
-    margin-top: var(--spacing-xs);
     font-style: italic;
     word-break: break-word;
+}
+
+.oracle-result .oracle-expand-notes {
+    flex-shrink: 0;
 }
 
 .oracle-spinning {

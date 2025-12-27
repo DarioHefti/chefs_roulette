@@ -128,6 +128,9 @@
         elements.vetoButton.addEventListener('click', handleVeto);
         elements.tagFilter.addEventListener('change', handleTagFilterChange);
         
+        // Oracle expand notes button (event delegation)
+        elements.oracleDisplay.addEventListener('click', handleOracleExpandClick);
+        
         // Menu registry
         elements.addMenuBtn.addEventListener('click', openAddModal);
         elements.searchInput.addEventListener('input', debounce(handleSearch, 300));
@@ -261,6 +264,19 @@
         // Reset oracle when filter changes
         Roulette.reset(elements.oracleDisplay);
         elements.vetoButton.classList.add('hidden');
+    }
+    
+    function handleOracleExpandClick(e) {
+        // Check if clicked element is the expand button
+        if (e.target.classList.contains('oracle-expand-notes')) {
+            const currentResult = Roulette.getCurrentResult();
+            if (currentResult && currentResult.notes) {
+                openNotesModal({
+                    name: currentResult.name,
+                    notes: currentResult.notes
+                });
+            }
+        }
     }
     
     // ═══════════════════════════════════════════════════════════════
@@ -503,18 +519,9 @@
     }
     
     function openShareModal() {
-        // Generate preview - show menu count and names
-        const menus = Storage.getMenus();
-        let previewText = `${menus.length} menu(s) to share:\n\n`;
-        menus.forEach((menu, i) => {
-            previewText += `${i + 1}. ${menu.name}`;
-            if (menu.tags.length > 0) {
-                previewText += ` (${menu.tags.join(', ')})`;
-            }
-            previewText += '\n';
-        });
-        
-        elements.sharePreview.textContent = previewText;
+        // Show the actual JSON that will be exported
+        const jsonData = Storage.generateShareData();
+        elements.sharePreview.textContent = jsonData;
         elements.shareStatus.classList.add('hidden');
         elements.shareModal.classList.remove('hidden');
     }
@@ -640,7 +647,7 @@
         const parsedMenus = Storage.parseSharedText(text);
         
         if (parsedMenus.length === 0) {
-            alert('Could not find any menus in the pasted text.');
+            alert('Could not parse the JSON data.\n\nMake sure you copied the data from the Share dialog.\n\nExpected format: [{"name":"Dish Name","tags":["tag1"],"notes":"..."}]');
             return;
         }
         
@@ -946,15 +953,33 @@
     // NOTES MODAL
     // ═══════════════════════════════════════════════════════════════
     
-    function openNotesModal(menuId) {
-        const menu = Storage.getMenuById(menuId);
-        if (!menu || !menu.notes) return;
+    /**
+     * Open the notes modal
+     * @param {string|Object} menuIdOrData - Either a menu ID string, or an object with {name, notes}
+     */
+    function openNotesModal(menuIdOrData) {
+        let name, notes;
+        
+        if (typeof menuIdOrData === 'string') {
+            // It's a menu ID - fetch from storage
+            const menu = Storage.getMenuById(menuIdOrData);
+            if (!menu || !menu.notes) return;
+            name = menu.name;
+            notes = menu.notes;
+        } else if (menuIdOrData && typeof menuIdOrData === 'object') {
+            // It's direct data with name and notes
+            if (!menuIdOrData.notes) return;
+            name = menuIdOrData.name || 'Notes';
+            notes = menuIdOrData.notes;
+        } else {
+            return;
+        }
         
         // Set the title with dish name
-        elements.notesModalTitle.textContent = `═══ ${menu.name.toUpperCase()} ═══`;
+        elements.notesModalTitle.textContent = `═══ ${name.toUpperCase()} ═══`;
         
         // Format the notes content - linkify URLs and preserve newlines
-        elements.notesModalBody.innerHTML = linkify(menu.notes);
+        elements.notesModalBody.innerHTML = linkify(notes);
         
         elements.notesModal.classList.remove('hidden');
     }
