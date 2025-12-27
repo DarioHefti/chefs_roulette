@@ -155,13 +155,11 @@ const Roulette = (function() {
             ? `<span class="decree-tags">${menu.tags.map(t => '#' + t).join(' ')}</span>`
             : '';
         
-        // Check if notes are long enough to warrant an expand button
-        const hasLongNotes = menu.notes && (menu.notes.length > 50 || menu.notes.includes('\n'));
-        
+        // Always show expand button if there are notes (especially important for mobile)
         const notesHtml = menu.notes 
             ? `<div class="decree-notes-container">
-                <span class="decree-notes">"${truncate(menu.notes, 60)}"</span>
-                ${hasLongNotes ? `<button class="expand-notes-btn oracle-expand-notes">[+]</button>` : ''}
+                <span class="decree-notes">"${truncate(menu.notes, 50)}"</span>
+                <button class="expand-notes-btn oracle-expand-notes">[+]</button>
                </div>`
             : '';
         
