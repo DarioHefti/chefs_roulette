@@ -107,7 +107,46 @@ body {
     padding: var(--spacing-md) 0;
 }
 
+/* Mobile title - shown on small screens */
+.mobile-title {
+    font-size: 1.8rem;
+    color: var(--text-cream);
+    text-shadow: 0 0 20px var(--shadow-color);
+    letter-spacing: 0.15em;
+    margin-bottom: var(--spacing-sm);
+    border-top: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    padding: var(--spacing-sm) 0;
+    position: relative;
+}
+
+.mobile-title::before,
+.mobile-title::after {
+    content: '◆';
+    position: absolute;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+}
+
+.mobile-title::before {
+    left: 50%;
+    top: -0.5em;
+    transform: translateX(-50%);
+    background: var(--bg-dark);
+    padding: 0 0.5em;
+}
+
+.mobile-title::after {
+    left: 50%;
+    bottom: -0.5em;
+    transform: translateX(-50%);
+    background: var(--bg-dark);
+    padding: 0 0.5em;
+}
+
+/* ASCII title - hidden on mobile by default */
 .ascii-title {
+    display: none;
     font-size: 0.32rem;
     line-height: 1.1;
     color: var(--text-cream);
@@ -364,7 +403,6 @@ body {
     white-space: nowrap;
     -webkit-appearance: none;
     appearance: none;
-    flex: 1;
     text-align: center;
 }
 
@@ -436,17 +474,16 @@ textarea.typewriter-input {
 }
 
 .registry-controls {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: var(--spacing-xs);
     margin-bottom: var(--spacing-md);
-    align-items: stretch;
 }
 
 .search-group {
-    flex: 1 1 100%;
-    order: 4;
-    margin-top: var(--spacing-xs);
+    grid-column: 1 / -1;
+    order: 0;
+    margin-bottom: var(--spacing-xs);
 }
 
 .search-group .typewriter-input {
@@ -454,7 +491,7 @@ textarea.typewriter-input {
 }
 
 #add-menu-btn {
-    flex: 1 1 auto;
+    grid-column: 1 / -1;
     order: 1;
 }
 
@@ -999,8 +1036,14 @@ textarea.typewriter-input {
         padding: var(--spacing-md);
     }
     
+    /* Hide mobile title, show ASCII on tablet+ */
+    .mobile-title {
+        display: none;
+    }
+    
     .ascii-title {
-        font-size: 0.5rem;
+        display: block;
+        font-size: 0.42rem;
     }
     
     .tagline {
@@ -1037,6 +1080,7 @@ textarea.typewriter-input {
     }
     
     .registry-controls {
+        display: flex;
         flex-wrap: nowrap;
         gap: var(--spacing-sm);
     }
@@ -1045,12 +1089,14 @@ textarea.typewriter-input {
         flex: 1;
         order: 2;
         margin-top: 0;
+        margin-bottom: 0;
         min-width: 200px;
     }
     
     #add-menu-btn {
         flex: 0 0 auto;
         order: 1;
+        grid-column: auto;
     }
     
     #share-btn {
@@ -1123,10 +1169,16 @@ textarea.typewriter-input {
 
 @media (min-width: 768px) {
     .ascii-title {
-        font-size: 0.65rem;
+        font-size: 0.55rem;
     }
     
     .menu-item-notes {
         max-width: 400px;
+    }
+}
+
+@media (min-width: 900px) {
+    .ascii-title {
+        font-size: 0.65rem;
     }
 }
