@@ -158,7 +158,7 @@ chefs_roulette/
 
 Since this is a static site:
 
-1. Open `index.html` directly in browser
+1. Open `index.html` directly in browser, do NOT run it with a python server
 2. Test on multiple screen sizes (mobile-first)
 3. Verify localStorage persistence
 4. Test with browser DevTools network throttling

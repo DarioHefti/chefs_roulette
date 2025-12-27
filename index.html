@@ -120,6 +120,17 @@
                     <span class="ai-icon">✨</span> LET THE AI SUGGEST A MENU
                 </button>
                 
+                <!-- Import from URL -->
+                <div class="url-import-section" id="url-import-section">
+                    <label for="recipe-url">IMPORT FROM FOOBY.CH</label>
+                    <div class="url-import-row">
+                        <input type="text" id="recipe-url" class="typewriter-input" 
+                               placeholder="Paste fooby.ch recipe URL...">
+                        <button type="button" class="action-button" id="fetch-recipe-btn">[FETCH]</button>
+                    </div>
+                    <div class="url-import-status hidden" id="url-import-status"></div>
+                </div>
+                
                 <form id="menu-form">
                     <input type="hidden" id="menu-id">
                     
@@ -257,6 +268,17 @@
             </div>
         </div>
 
+        <!-- Notes Viewer Modal -->
+        <div class="modal hidden" id="notes-modal">
+            <div class="modal-content notes-modal-content">
+                <div class="modal-header">
+                    <h3 id="notes-modal-title">═══ RECIPE NOTES ═══</h3>
+                    <button class="close-button" id="close-notes-modal">[X]</button>
+                </div>
+                <div class="notes-modal-body" id="notes-modal-body"></div>
+            </div>
+        </div>
+
         <!-- History Section -->
         <section class="history-section">
             <h2 class="section-title">═══ RECENT PROPHECIES =══</h2>
@@ -279,6 +301,7 @@
     <script src="js/typewriter.js"></script>
     <script src="js/roulette.js"></script>
     <script src="js/ai.js"></script>
+    <script src="js/scraper.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

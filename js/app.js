@@ -69,6 +69,18 @@
         aiRetryBtn: document.getElementById('ai-retry-btn'),
         aiSuggestionsList: document.getElementById('ai-suggestions-list'),
         
+        // URL Import
+        urlImportSection: document.getElementById('url-import-section'),
+        recipeUrl: document.getElementById('recipe-url'),
+        fetchRecipeBtn: document.getElementById('fetch-recipe-btn'),
+        urlImportStatus: document.getElementById('url-import-status'),
+        
+        // Notes Modal
+        notesModal: document.getElementById('notes-modal'),
+        notesModalTitle: document.getElementById('notes-modal-title'),
+        notesModalBody: document.getElementById('notes-modal-body'),
+        closeNotesModal: document.getElementById('close-notes-modal'),
+        
         // History
         historyList: document.getElementById('history-list')
     };
@@ -142,6 +154,19 @@
         elements.closeAiSuggestionsModal.addEventListener('click', closeAiSuggestionsModal);
         elements.aiSuggestionsModal.addEventListener('click', handleAiSuggestionsBackdropClick);
         elements.aiRetryBtn.addEventListener('click', fetchAiSuggestions);
+        
+        // URL Import
+        elements.fetchRecipeBtn.addEventListener('click', handleFetchRecipe);
+        elements.recipeUrl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleFetchRecipe();
+            }
+        });
+        
+        // Notes Modal
+        elements.closeNotesModal.addEventListener('click', closeNotesModal);
+        elements.notesModal.addEventListener('click', handleNotesModalBackdropClick);
         
         // Keyboard shortcuts
         document.addEventListener('keydown', handleKeyboard);
@@ -257,8 +282,13 @@
             ? `<div class="menu-item-tags">${menu.tags.map(t => `<span>${escapeHtml(t)}</span>`).join('')}</div>`
             : '';
         
+        // Show expand button if notes are longer than 100 chars or have multiple lines
+        const hasLongNotes = menu.notes && (menu.notes.length > 100 || menu.notes.includes('\n'));
         const notesHtml = menu.notes
-            ? `<div class="menu-item-notes">${escapeHtml(menu.notes)}</div>`
+            ? `<div class="menu-item-notes">
+                <span class="menu-item-notes-text">${escapeHtml(menu.notes)}</span>
+                ${hasLongNotes ? `<button class="expand-notes-btn" data-id="${menu.id}">[+]</button>` : ''}
+               </div>`
             : '';
         
         div.innerHTML = `
@@ -276,6 +306,12 @@
         // Bind action buttons
         div.querySelector('.edit-btn').addEventListener('click', () => openEditModal(menu.id));
         div.querySelector('.delete-btn').addEventListener('click', () => handleDelete(menu.id));
+        
+        // Bind expand notes button if present
+        const expandBtn = div.querySelector('.expand-notes-btn');
+        if (expandBtn) {
+            expandBtn.addEventListener('click', () => openNotesModal(menu.id));
+        }
         
         return div;
     }
@@ -328,6 +364,8 @@
         elements.menuForm.reset();
         elements.menuId.value = '';
         elements.aiSuggestBtn.classList.remove('hidden');
+        elements.urlImportSection.classList.remove('hidden');
+        resetUrlImportSection();
         updateAiSettingsStatus();
         elements.menuModal.classList.remove('hidden');
         elements.menuName.focus();
@@ -343,6 +381,7 @@
         elements.menuTags.value = menu.tags.join(', ');
         elements.menuNotes.value = menu.notes;
         elements.aiSuggestBtn.classList.add('hidden');
+        elements.urlImportSection.classList.add('hidden');
         elements.menuModal.classList.remove('hidden');
         elements.menuName.focus();
     }
@@ -350,6 +389,7 @@
     function closeModal() {
         elements.menuModal.classList.add('hidden');
         elements.menuForm.reset();
+        resetUrlImportSection();
     }
     
     function handleModalBackdropClick(e) {
@@ -772,6 +812,101 @@
     }
     
     // ═══════════════════════════════════════════════════════════════
+    // URL IMPORT (Recipe Scraping)
+    // ═══════════════════════════════════════════════════════════════
+    
+    function showUrlImportStatus(message, type) {
+        elements.urlImportStatus.textContent = message;
+        elements.urlImportStatus.className = 'url-import-status ' + type;
+        elements.urlImportStatus.classList.remove('hidden');
+    }
+    
+    function hideUrlImportStatus() {
+        elements.urlImportStatus.classList.add('hidden');
+        elements.urlImportStatus.className = 'url-import-status hidden';
+    }
+    
+    function resetUrlImportSection() {
+        elements.recipeUrl.value = '';
+        hideUrlImportStatus();
+    }
+    
+    async function handleFetchRecipe() {
+        const url = elements.recipeUrl.value.trim();
+        
+        if (!url) {
+            showUrlImportStatus('Please enter a URL', 'error');
+            return;
+        }
+        
+        // Validate URL before fetching
+        const validation = Scraper.validateUrl(url);
+        if (!validation.valid) {
+            showUrlImportStatus(validation.error, 'error');
+            return;
+        }
+        
+        // Show loading state
+        showUrlImportStatus('Fetching recipe...', 'loading');
+        elements.fetchRecipeBtn.disabled = true;
+        
+        try {
+            const recipe = await Scraper.fetchRecipe(url);
+            
+            // Prefill the form
+            elements.menuName.value = recipe.name;
+            elements.menuTags.value = recipe.tags.join(', ');
+            elements.menuNotes.value = recipe.notes;
+            
+            // Show success and clear URL input
+            showUrlImportStatus('Recipe imported successfully!', 'success');
+            elements.recipeUrl.value = '';
+            
+            // Focus the name field so user can review/edit
+            elements.menuName.focus();
+            elements.menuName.select();
+            
+            // Hide success message after 3 seconds
+            setTimeout(() => {
+                hideUrlImportStatus();
+            }, 3000);
+            
+        } catch (error) {
+            showUrlImportStatus(error.message || 'Failed to fetch recipe', 'error');
+        } finally {
+            elements.fetchRecipeBtn.disabled = false;
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // NOTES MODAL
+    // ═══════════════════════════════════════════════════════════════
+    
+    function openNotesModal(menuId) {
+        const menu = Storage.getMenuById(menuId);
+        if (!menu || !menu.notes) return;
+        
+        // Set the title with dish name
+        elements.notesModalTitle.textContent = `═══ ${menu.name.toUpperCase()} ═══`;
+        
+        // Format the notes content - preserve newlines and make it readable
+        elements.notesModalBody.textContent = menu.notes;
+        
+        elements.notesModal.classList.remove('hidden');
+    }
+    
+    function closeNotesModal() {
+        elements.notesModal.classList.add('hidden');
+        elements.notesModalBody.textContent = '';
+    }
+    
+    function handleNotesModalBackdropClick(e) {
+        if (e.target === elements.notesModal) {
+            closeNotesModal();
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
     // KEYBOARD SHORTCUTS
     // ═══════════════════════════════════════════════════════════════
     
@@ -792,6 +927,10 @@
             }
             if (!elements.aiSuggestionsModal.classList.contains('hidden')) {
                 closeAiSuggestionsModal();
+                return;
+            }
+            if (!elements.notesModal.classList.contains('hidden')) {
+                closeNotesModal();
                 return;
             }
         }
